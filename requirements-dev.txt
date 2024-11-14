@@ -1,0 +1,4 @@
+-r requirements.txt  # Inherits production requirements
+
+pytest
+
