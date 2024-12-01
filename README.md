@@ -8,6 +8,13 @@ the paper, they describe large-scale distributed combinatorialsearch, so we
 could write a password cracking program that runs distributed on the chord 
 network.
 
+## Files
+- `.python-version`: specifies python version for pyenv.
+- `chk_config.py`: simple script for verifying setup. if you get a mininet import error, this can help debug. make sure you can run it with `sudo`.
+- `chord_paper.pdf`: the research paper we're working from.
+- `requirements.txt`: python dependencies
+- `requirements-dev.txt`: development dependencies. installs from `requirements.txt` first, then adds dev dependencies, so no need to run `pip install` for both.
+
 ## Dependencies
 - mininet
 - openvswitch-testcontroller
@@ -32,9 +39,9 @@ remember/copy&paste this for later.
 env variable:
     `export PYTHONPATH=$PYTHONPATH:/usr/lib/python3/dist-packages/`
     - to have this persist, add to your shell config file (`.bashrc`, etc)
-4. (optional) install [`pyenv`](https://github.com/pyenv/pyenv)
-    - once installed, you'll also need to install python 3.11 to
-    match our version. pyenv will automatically pick up the `.python-version`
+4. install [`pyenv`](https://github.com/pyenv/pyenv) (recommended), or install python directly
+    - if using `pyenv`, use the basic install for linux. Once installed, you'll also need to install
+   python 3.11 to match our version. pyenv will automatically pick up the `.python-version`
     file in this repo.
         - `pyenv install 3.11`
 5. clone this repo. from inside the repo, create and activate a virtual
@@ -52,15 +59,19 @@ At this point, you should be installed and good to go.
 ## Usage
 
 To run scripts using mininet, the full command format is:
+
 `sudo [pass PYTHONPATH up] [path/to/venv/python] some_script.py`
 
 So to check config, it will be:
+
 `sudo PYTHONPATH=$PYTHONPATH /home/ubuntu/chord/.venv/bin/python chk_config.py`
 
 for quality of life, add an alias to your shell config:
+
 `alias pychord="sudo PYTHONPATH=\$PYTHONPATH /home/ubuntu/chord/.venv/bin/python "`
 
 that way checking config will be:
+
 `pychord chk_config.py`
 
 **explanation:** running python programs is a little weird, since we're using system-installed
