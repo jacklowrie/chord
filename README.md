@@ -10,21 +10,27 @@ network.
 
 ## Files
 - `.python-version`: specifies python version for pyenv.
-- `chk_config.py`: simple script for verifying setup. if you get a mininet import error, this can help debug. make sure you can run it with `sudo`.
+- `chk_config.py`: simple script for verifying setup. if you get a mininet import error, this can help debug. make sure you can run it with `sudo` and/or `pychord` alias (see usage)
+- `chk_mininet.py`: simple script for making sure mininet works. sets up 2 hosts, 1 switch, and pings between them. make sure you can run it with `sudo` and/or `pychord` alias (see usage)
 - `chord_paper.pdf`: the research paper we're working from.
 - `requirements.txt`: python dependencies
 - `requirements-dev.txt`: development dependencies. installs from `requirements.txt` first, then adds dev dependencies, so no need to run `pip install` for both.
 
 ## Dependencies
 - mininet
+- openvswitch-testcontroller
+    - explanation: [`ovs-controller` renamed to `test-controller`](https://stackoverflow.com/a/47312367)
 - a recent python. we use 3.11, installed via pyenv.
 
 ## Installation
 We developed on an ubuntu instance on aws EC2.
-1. ensure that mininet is installed.
+1. ensure that mininet and testcontroller are installed and linked.
     - `sudo apt install mininet`
-    - you can verify installation with `mn --version`, which will
-      print the mininet version if correctly installed.
+        - you can verify installation with `mn --version`, which will
+            print the mininet version if correctly installed.
+    - `sudo apt-get install openvswitch-testcontroller`
+    - `sudo ln /usr/bin/ovs-testcontroller /usr/bin/controller`
+
 2. get the path to mininet module (run with system python).
 remember/copy&paste this for later.
     - `python3 -c "import mininet; print(mininet.__file__)"`
