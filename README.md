@@ -34,9 +34,9 @@ remember/copy&paste this for later.
 env variable:
     `export PYTHONPATH=$PYTHONPATH:/usr/lib/python3/dist-packages/`
     - to have this persist, add to your shell config file (`.bashrc`, etc)
-4. (optional) install [`pyenv`](https://github.com/pyenv/pyenv)
-    - once installed, you'll also need to install python 3.11 to
-    match our version. pyenv will automatically pick up the `.python-version`
+4. install [`pyenv`](https://github.com/pyenv/pyenv) (recommended), or install python directly
+    - if using `pyenv`, use the basic install for linux. Once installed, you'll also need to install
+   python 3.11 to match our version. pyenv will automatically pick up the `.python-version`
     file in this repo.
         - `pyenv install 3.11`
 5. clone this repo. from inside the repo, create and activate a virtual
