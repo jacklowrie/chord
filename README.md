@@ -10,14 +10,19 @@ network.
 
 ## Dependencies
 - mininet
+- openvswitch-testcontroller
+    - explanation: [`ovs-controller` renamed to `test-controller`](https://stackoverflow.com/a/47312367)
 - a recent python. we use 3.11, installed via pyenv.
 
 ## Installation
 We developed on an ubuntu instance on aws EC2.
-1. ensure that mininet is installed.
+1. ensure that mininet and testcontroller are installed and linked.
     - `sudo apt install mininet`
-    - you can verify installation with `mn --version`, which will
-      print the mininet version if correctly installed.
+        - you can verify installation with `mn --version`, which will
+            print the mininet version if correctly installed.
+    - `sudo apt-get install openvswitch-testcontroller`
+    - `sudo ln /usr/bin/ovs-testcontroller /usr/bin/controller`
+
 2. get the path to mininet module (run with system python).
 remember/copy&paste this for later.
     - `python3 -c "import mininet; print(mininet.__file__)"`
