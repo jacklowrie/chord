@@ -47,15 +47,19 @@ At this point, you should be installed and good to go.
 ## Usage
 
 To run scripts using mininet, the full command format is:
+
 `sudo [pass PYTHONPATH up] [path/to/venv/python] some_script.py`
 
 So to check config, it will be:
+
 `sudo PYTHONPATH=$PYTHONPATH /home/ubuntu/chord/.venv/bin/python chk_config.py`
 
 for quality of life, add an alias to your shell config:
+
 `alias pychord="sudo PYTHONPATH=\$PYTHONPATH /home/ubuntu/chord/.venv/bin/python "`
 
 that way checking config will be:
+
 `pychord chk_config.py`
 
 **explanation:** running python programs is a little weird, since we're using system-installed
@@ -64,3 +68,10 @@ doesn't seem to be compatible with pip). mininet needs root privileges,
 but sudo doesn't inherit `env` variables by default. to invoke, we need
 to pass our PYTHONPATH to the root environment, and also use the full python
 path (to the venv python, otherwise it will use system python).
+
+## Files
+- `.python-version`: specifies python version for pyenv.
+- `chk_config.py`: simple script for verifying setup. if you get a mininet import error, this can help debug. make sure you can run it with `sudo`.
+- `chord_paper.pdf`: the research paper we're working from.
+- `requirements.txt`: python dependencies
+- `requirements-dev.txt`: development dependencies. installs from `requirements.txt` first, then adds dev dependencies, so no need to run `pip install` for both.
