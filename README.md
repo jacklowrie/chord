@@ -1,4 +1,4 @@
-# chord
+# Chord
 implementation of chord
 
 right now, we're thinking we implement chord (in python) and set it up so we 
@@ -45,21 +45,22 @@ this should output the same path as when running with system python.
 At this point, you should be installed and good to go.
 
 ## Usage
-running python programs is a little weird, since we're using system-installed
-mininet with python in a virtual env (we'd avoid this, but system python
-doesn't seem to be compatible with pip). mininet needs root privileges,
-but sudo doesn't inherit env variables by default. to invoke, we need
-to pass our PYTHONPATH to the root environment, and also use the full python
-path (to the venv python, otherwise it will use system python).
 
-The full command is:
+To run scripts using mininet, the full command format is:
 `sudo [pass PYTHONPATH up] [path/to/venv/python] some_script.py`
 
 So to check config, it will be:
 `sudo PYTHONPATH=$PYTHONPATH /home/ubuntu/chord/.venv/bin/python chk_config.py`
 
 for quality of life, add an alias to your shell config:
-`alias pychord="sudo PYTHONPATH=$PYTHONPATH /home/ubuntu/.venv/bin/python "`
+`alias pychord="sudo PYTHONPATH=\$PYTHONPATH /home/ubuntu/chord/.venv/bin/python "`
 
 that way checking config will be:
 `pychord chk_config.py`
+
+**explanation:** running python programs is a little weird, since we're using system-installed
+mininet with python in a virtual env (we'd avoid this by not using a venv, but system python
+doesn't seem to be compatible with pip). mininet needs root privileges,
+but sudo doesn't inherit `env` variables by default. to invoke, we need
+to pass our PYTHONPATH to the root environment, and also use the full python
+path (to the venv python, otherwise it will use system python).
