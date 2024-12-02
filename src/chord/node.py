@@ -76,14 +76,7 @@ class Node:
             )
             
             if response:
-                # Parse the response into an Address object
-                # Assuming the response is in "key:ip:port" format
-                parts = response.split(':')
-                if len(parts) == 3:
-                    self.successor = Address(parts[1], int(parts[2]))
-                    self.successor.key = int(parts[0])
-                else:
-                    raise ValueError("Invalid successor response format")
+                self.successor = self._parse_node_address(response)
             else:
                 raise ValueError("Failed to find successor")
             
@@ -120,12 +113,22 @@ class Node:
         closest_node = self.closest_preceding_node(id)
         
         # If closest node is self, return successor
-        if closest_node is self:
+        if closest_node == self.address:
             return self.successor
-        
-        # Forward request to closest preceding node
-        return closest_node.find_successor(id)
 
+        # Forward request to closest preceding node via network
+        try:
+            response = self._net.send_request(
+                closest_node, 
+                'FIND_SUCCESSOR', 
+                id
+            )
+            return self._parse_node_address(response)
+        
+        except Exception as e:
+            print(f"Find successor failed: {e}")
+            # Fallback to local successor if network request fails
+            return self.successor
 
 
     def closest_preceding_node(self, id):
@@ -281,6 +284,29 @@ class Node:
             return self.predecessor
         
         return "INVALID_METHOD"
+
+
+    def _parse_response(self, response):
+        """
+        Parses a network response into an Address object. Only addresses are expected.
+
+        Args:
+            response (str): Serialized node address in "key:ip:port" format.
+
+        Returns:
+            Address: Parsed Address object.
+
+        Raises:
+            ValueError: If the response format is invalid.
+        """
+        parts = response.split(':')
+        if len(parts) == 3:
+            address = Address(parts[1], int(parts[2]))
+            address.key = int(parts[0])
+
+            return address
+        else:
+            raise ValueError("Invalid node address response format")
 
 
 

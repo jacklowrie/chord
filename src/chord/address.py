@@ -53,5 +53,5 @@ class Address:
 
 
     def __repr__(self):
-        return f"Address(key={self.key}, ip={self.ip}, port={self.port})"
+        return f"{self.key}:{self.ip}:{self.port}"
 
