@@ -27,16 +27,13 @@ class Node:
             port (int): Port number to listen on.
         """
 
-
-
-        # Network identification
         self.address = Address(ip, port)
         
         # Network topology management
         self.successor = None
         self.predecessor = None
         self.finger_table = [None] * Address._M
-        self.next = 0 # for fix_fingers (iterating through finger_table)
+        self._next = 0 # for fix_fingers (iterating through finger_table)
         
         # Networking
         self._net = _Net(ip, port, self._process_request)
@@ -52,6 +49,7 @@ class Node:
         """
         self.predecessor = None
         self.successor = self.address
+        self.start()
         self.fix_fingers()
     
 
@@ -89,15 +87,18 @@ class Node:
             else:
                 raise ValueError("Failed to find successor")
             
-            # Initialize finger table
+            self.start()
             self.fix_fingers()
             
-            # Start the node's network listener
-            self.start()
             
         except Exception as e:
             print(f"Join failed: {e}")
             raise
+
+
+
+    def fix_fingers(self)
+        pass
 
 
 
@@ -124,29 +125,6 @@ class Node:
         
         # Forward request to closest preceding node
         return closest_node.find_successor(id)
-    
-
-
-    def _is_key_in_range(self, key):
-        """
-        Checks if a key is within the node's range.
-
-        Args:
-            key (int): Identifier to check.
-
-        Returns:
-            bool: True if the key is in the node's range, False otherwise.
-        """
-        if not self.successor: # no successor case
-            return True
-        
-        successor_key = self.successor.key
-        
-        if self.address.key < successor_key:
-            # Normal case: key is strictly between node and successor
-            return self.address.key < key < successor_key
-        else:  # Wrap around case
-            return key > self.address.key or key < successor_key
 
 
 
@@ -168,25 +146,7 @@ class Node:
         # If no node found, return self
         return self.address
     
-    
 
-    def _is_between(self, start, end, key):
-        """
-        Checks if a node is between two identifiers in the Chord ring.
-
-        Args:
-            start (int): Starting identifier.
-            end (int): Ending identifier.
-            key (int): Node identifier to check.
-
-        Returns:
-            bool: True if the node is between start and end, False otherwise.
-        """
-        if start < end:
-            return start < key < end
-        else:  # Wrap around case
-            return key > start or key < end
-    
 
     def check_predecessor(self):
         """
@@ -240,11 +200,6 @@ class Node:
 
 
 
-    def fix_fingers(self):
-        pass
-
-
-
     def start(self):
         """
         Starts the Chord node's network listener.
@@ -252,8 +207,60 @@ class Node:
         Begins accepting incoming network connections in a separate thread.
         """
         self._net.start()
+
+
+
+    def stop(self):
+        """
+        Gracefully stops the Chord node's network listener.
+
+        Closes the server socket and waits for the network thread to terminate.
+        """
+        self._net.stop()
+
+
+
+    def _is_key_in_range(self, key):
+        """
+        Checks if a key is within the node's range.
+
+        Args:
+            key (int): Identifier to check.
+
+        Returns:
+            bool: True if the key is in the node's range, False otherwise.
+        """
+        if not self.successor: # no successor case
+            return True
+        
+        successor_key = self.successor.key
+        
+        if self.address.key < successor_key:
+            # Normal case: key is strictly between node and successor
+            return self.address.key < key < successor_key
+        else:  # Wrap around case
+            return key > self.address.key or key < successor_key
     
+
+
+    def _is_between(self, start, end, key):
+        """
+        Checks if a node is between two identifiers in the Chord ring.
+
+        Args:
+            start (int): Starting identifier.
+            end (int): Ending identifier.
+            key (int): Node identifier to check.
+
+        Returns:
+            bool: True if the node is between start and end, False otherwise.
+        """
+        if start < end:
+            return start < key < end
+        else:  # Wrap around case
+            return key > start or key < end
     
+
 
     def _process_request(self, method, args):
         """
@@ -274,14 +281,6 @@ class Node:
             return self.predecessor
         
         return "INVALID_METHOD"
-    
-    def stop(self):
-        """
-        Gracefully stops the Chord node's network listener.
-
-        Closes the server socket and waits for the network thread to terminate.
-        """
-        self._net.stop()
 
 
 
