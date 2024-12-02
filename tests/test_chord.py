@@ -1,7 +1,8 @@
 import pytest
 import hashlib
 
-from chord import ChordNode, Address
+from chord import Address
+from chord import Node as ChordNode
 
 ip = "1.2.3.4"
 port = 5

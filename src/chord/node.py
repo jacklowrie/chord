@@ -1,45 +1,8 @@
 import hashlib
-import socket
-import threading
-import sys
 
+from .address import Address
 
-class Address:
-    """
-    Represents a network address with a unique key in a distributed system.
-
-    This class encapsulates the network location (IP and port) and a unique
-    identifier (key) used for routing and comparison in Chord.
-
-    Attributes:
-        key (int): A unique identifier for the node in the distributed system.
-        ip (str): The IP address of the node.
-        port (int): The network port number of the node.
-
-    Provides methods for equality comparison and string representation.
-    """
-    __slots__: ['key', 'ip', 'port']
-
-    def __init__(self, key, ip, port):
-        self.key = key
-        self.ip = ip
-        self.port = port
-    
-
-    def __eq__(self, other):
-        if not isinstance(other, Address):
-            return False
-        return (self.ip == other.ip and 
-                self.port == other.port and 
-                self.key == other.key)
-    
-
-    def __repr__(self):
-        return f"Address(key={self.key}, ip={self.ip}, port={self.port})"
-
-
-
-class ChordNode:
+class Node:
     """Implements a Chord distributed hash table node.
     
     This is meant to run on a host and handle any chord-related
@@ -81,6 +44,8 @@ class ChordNode:
         self.is_running = False
         self.network_thread = None
         
+
+
     def _hash(self, key):
         """
         Generates a consistent hash for identifiers.
@@ -131,7 +96,7 @@ class ChordNode:
             id (int): Identifier to find the successor for.
 
         Returns:
-            ChordNode: The node responsible for the given identifier.
+            Address: The address of the node responsible for the given identifier.
         """
         # If id is between this node and its successor
         if self._is_key_in_range(id):
@@ -147,7 +112,6 @@ class ChordNode:
         # Forward request to closest preceding node
         return closest_node.find_successor(id)
     
-
 
 
     def _is_key_in_range(self, key):
@@ -192,6 +156,7 @@ class ChordNode:
         return self.address
     
     
+
     def _is_between(self, start, end, key):
         """
         Checks if a node is between two identifiers in the Chord ring.
@@ -208,9 +173,13 @@ class ChordNode:
             return start < key < end
         else:  # Wrap around case
             return key > start or key < end
+    
+    
 
-    def fix_fingers(self):
+    def fix_fingers():
         pass
+
+
 
     def __repr__(self):
         """
