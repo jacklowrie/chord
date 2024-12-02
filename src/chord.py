@@ -3,6 +3,42 @@ import socket
 import threading
 import sys
 
+
+class Address:
+    """
+    Represents a network address with a unique key in a distributed system.
+
+    This class encapsulates the network location (IP and port) and a unique
+    identifier (key) used for routing and comparison in Chord.
+
+    Attributes:
+        key (int): A unique identifier for the node in the distributed system.
+        ip (str): The IP address of the node.
+        port (int): The network port number of the node.
+
+    Provides methods for equality comparison and string representation.
+    """
+    __slots__: ['key', 'ip', 'port']
+
+    def __init__(self, key, ip, port):
+        self.key = key
+        self.ip = ip
+        self.port = port
+    
+
+    def __eq__(self, other):
+        if not isinstance(other, Address):
+            return False
+        return (self.ip == other.ip and 
+                self.port == other.port and 
+                self.key == other.key)
+    
+
+    def __repr__(self):
+        return f"Address(key={self.key}, ip={self.ip}, port={self.port})"
+
+
+
 class ChordNode:
     """Implements a Chord distributed hash table node.
     
@@ -12,11 +48,9 @@ class ChordNode:
     the chord ring.
 
     Attributes:
-        ip (str): IP address of the node.
-        port (int): Port number the node listens on.
-        node_id (int): Unique identifier for the node in the Chord ring.
-        successor (ChordNode): The next node in the Chord ring.
-        predecessor (ChordNode): The previous node in the Chord ring.
+        address (Address): node address info (key, ip, port).
+        successor (Address): The next node in the Chord ring.
+        predecessor (Address): The previous node in the Chord ring.
         finger_table (list): Routing table for efficient lookup.
     """
 
@@ -28,16 +62,13 @@ class ChordNode:
             ip (str): IP address for the node.
             port (int): Port number to listen on.
         """
-        # Network identification
-        self.ip = ip
-        self.port = port
-        
+
         # Hardcoded 16-bit hash space
         self.m = 16
         self.hash_space = 2 ** self.m
-        
-        # Node identifier based on IP:port
-        self.node_id = self._hash(f"{ip}:{port}")
+
+        # Network identification
+        self.address = Address(self._hash(f"{ip}:{port}"), ip, port)
         
         # Network topology management
         self.successor = None
@@ -61,7 +92,9 @@ class ChordNode:
             int: Hashed identifier within the hash space.
         """
         return int(hashlib.sha1(key.encode()).hexdigest(), self.m) % self.hash_space
-    
+  
+
+
     def create(self):
         """
         Creates a new Chord ring with this node as the initial member.
@@ -69,9 +102,11 @@ class ChordNode:
         The node sets itself as its own successor and initializes the finger table.
         """
         self.predecessor = None
-        self.successor = self
+        self.successor = self.address
         self.fix_fingers()
     
+
+
     def join(self, known_node):
         """
         Joins an existing Chord ring through a known node.
@@ -81,14 +116,110 @@ class ChordNode:
         """
         self.predecessor = None
         # Use known node to find our successor
-        self.successor = known_node.find_successor(self.node_id)
+        self.successor = known_node.find_successor(self.key)
         
         # Initialize finger table
         self.fix_fingers()
 
+
+
     def find_successor(self, id):
-        pass
- 
+        """
+        Finds the successor node for a given identifier.
+
+        Args:
+            id (int): Identifier to find the successor for.
+
+        Returns:
+            ChordNode: The node responsible for the given identifier.
+        """
+        # If id is between this node and its successor
+        if self._is_key_in_range(id):
+            return self.address
+        
+        # Find closest preceding node to route through
+        closest_node = self.closest_preceding_node(id)
+        
+        # If closest node is self, return successor
+        if closest_node is self:
+            return self.successor
+        
+        # Forward request to closest preceding node
+        return closest_node.find_successor(id)
+    
+
+
+
+    def _is_key_in_range(self, key):
+        """
+        Checks if a key is within the node's range.
+
+        Args:
+            key (int): Identifier to check.
+
+        Returns:
+            bool: True if the key is in the node's range, False otherwise.
+        """
+        if not self.successor: # no successor case
+            return True
+        
+        successor_key = self.successor.key
+        
+        if self.address.key < successor_key:
+            # Normal case: key is strictly between node and successor
+            return self.address.key < key < successor_key
+        else:  # Wrap around case
+            return key > self.address.key or key < successor_key
+
+
+
+    def closest_preceding_node(self, id):
+        """
+        Finds the closest preceding node for a given identifier.
+
+        Args:
+            id (int): Identifier to find the closest preceding node for.
+
+        Returns:
+            Address: The address of closest preceding node in the finger table.
+        """
+        # Search finger table in reverse order
+        for finger in reversed(self.finger_table):
+            if finger and self._is_between(self.address.key, id, finger.key):
+                return finger
+        
+        # If no node found, return self
+        return self.address
+    
+    
+    def _is_between(self, start, end, key):
+        """
+        Checks if a node is between two identifiers in the Chord ring.
+
+        Args:
+            start (int): Starting identifier.
+            end (int): Ending identifier.
+            key (int): Node identifier to check.
+
+        Returns:
+            bool: True if the node is between start and end, False otherwise.
+        """
+        if start < end:
+            return start < key < end
+        else:  # Wrap around case
+            return key > start or key < end
+
     def fix_fingers(self):
         pass
+
+    def __repr__(self):
+        """
+        Provides a string representation of the Chord node.
+
+        Returns:
+            str: A descriptive string of the node's key properties.
+        """
+
+        return f"ChordNode(key={self.address.key})"
+
 
