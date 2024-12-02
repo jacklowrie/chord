@@ -7,6 +7,12 @@ def run_mininet():
     # Set logging level to info
     setLogLevel('info')
 
+    # set chord port
+    port = 5000
+
+    # activate
+    start_venv = "source .venv/bin/activate"
+
     # Create a Mininet instance with a software switch
     net = Mininet(controller=Controller)
 
@@ -23,18 +29,20 @@ def run_mininet():
     net.addLink(h1, s1)
     net.addLink(h2, s1)
 
+
     # Start the network
     net.start()
 
-    # Test connectivity between hosts using ping
-    print("Testing connectivity between h1 and h2...")
-    result = net.ping([h1, h2])  # This tests connectivity between h1 and h2
+    # start new ring
+    h1.cmd(start_venv)
+    h1.cmd(f"python chord_anchor.py 10.0.0.1 {port}")
 
-    # Report results
-    print(f"Results of ping from h1 to h2: {result}")
+    h2.cmd(start_venv)
+    h2.cmd(f"python chord_joiner.py 10.0.0.2 {port} 10.0.0.1")
+
     
     # Start Mininet CLI for further testing
-    #CLI(net)
+    CLI(net)
 
     # Stop the network
     net.stop()
