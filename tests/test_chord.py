@@ -27,7 +27,7 @@ def test_can_make_key(node):
 def test_can_create_ring(node):
     node.create()
 
-    assert node.successor == Address(key, ip, port)
+    assert node.successor == Address(ip, port)
 
 def test_is_key_in_range(node):
     node.create()
@@ -45,9 +45,9 @@ def test_is_key_in_range(node):
     node.address.key = 65530  # Near max of 16-bit hash space
     node.successor = Address(
         ip='5.6.7.8', 
-        port=6000, 
-        key=50  # Wrap around to beginning of hash space
+        port=6000
     )
+    node.successor.key = 50
     
     # Test wrap-around cases
     assert node._is_key_in_range(65535) == True  # Just before wrap
@@ -61,10 +61,13 @@ def test_closest_preceding_node_basic(node):
     """Test basic finger table routing"""
     # Create a mock finger table with some nodes
     node.finger_table = [
-        Address(10, '1.1.1.1', 5001),
-        Address(30, '2.2.2.2', 5002),
-        Address(50, '3.3.3.3', 5003)
+        Address('1.1.1.1', 5001),
+        Address('2.2.2.2', 5002),
+        Address('3.3.3.3', 5003)
     ]
+    node.finger_table[0].key = 10
+    node.finger_table[1].key = 30
+    node.finger_table[2].key = 50
     
     # Test finding a node between current node and target id
     result = node.closest_preceding_node(60)
@@ -79,10 +82,14 @@ def test_closest_preceding_node_wrap_around(node):
     # Simulate a wrap-around scenario in the hash space
     node.address.key = 65530  # Near max of 16-bit hash space
     node.finger_table = [
-        Address(10, '1.1.1.1', 5001),
-        Address(40, '2.2.2.2', 5002),
-        Address(60, '3.3.3.3', 5003)
+        Address('1.1.1.1', 5001),
+        Address('2.2.2.2', 5002),
+        Address('3.3.3.3', 5003)
     ]
+    node.finger_table[0].key = 10
+    node.finger_table[1].key = 40
+    node.finger_table[2].key = 60
+
     
     # Test wrap-around case
     result = node.closest_preceding_node(50)
@@ -104,10 +111,12 @@ def test_closest_preceding_node_sparse_finger_table(node):
     node.address.key = 0
     node.finger_table = [
         None,
-        Address(30, '1.1.1.1', 5001),
+        Address('1.1.1.1', 5001),
         None,
-        Address(50, '2.2.2.2', 5002)
+        Address('2.2.2.2', 5002)
     ]
+    node.finger_table[1].key = 30
+    node.finger_table[3].key = 50
     
     # Should return the first valid finger
     result = node.closest_preceding_node(40)

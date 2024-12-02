@@ -1,4 +1,4 @@
-import hashlib
+# node.py
 
 from .address import Address
 from .net import _Net
@@ -27,37 +27,21 @@ class Node:
             port (int): Port number to listen on.
         """
 
-        # Hardcoded 16-bit hash space
-        self.m = 16
-        self.hash_space = 2 ** self.m
+
 
         # Network identification
-        self.address = Address(self._hash(f"{ip}:{port}"), ip, port)
+        self.address = Address(ip, port)
         
         # Network topology management
         self.successor = None
         self.predecessor = None
-        self.finger_table = [None] * self.m
+        self.finger_table = [None] * Address._M
         self.next = 0 # for fix_fingers (iterating through finger_table)
         
         # Networking
         self._net = _Net(ip, port, self._process_request)
         self.is_running = False
         
-
-
-    def _hash(self, key):
-        """
-        Generates a consistent hash for identifiers.
-
-        Args:
-            key (str): Input string to hash.
-
-        Returns:
-            int: Hashed identifier within the hash space.
-        """
-        return int(hashlib.sha1(key.encode()).hexdigest(), self.m) % self.hash_space
-  
 
 
     def create(self):
