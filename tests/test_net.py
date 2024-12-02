@@ -67,3 +67,81 @@ def test_net_stop():
     
     # Verify thread was joined
     net.network_thread.join.assert_called_once()
+
+def test_send_request_success():
+    # Create a mock network instance
+    mock_handler = Mock()
+    net = _Net('localhost', 8000, mock_handler)
+    
+    # Mock the socket to simulate a successful request
+    with patch('socket.socket') as mock_socket:
+        # Setup mock socket behavior
+        mock_socket_instance = Mock()
+        mock_socket.return_value.__enter__.return_value = mock_socket_instance
+        
+        # Simulate successful connection and response
+        mock_socket_instance.recv.return_value = b"RESPONSE"
+        
+        # Call send_request
+        response = net.send_request(
+            Mock(ip='localhost', port=8001), 
+            'TEST', 
+            'arg1', 
+            'arg2'
+        )
+        
+        # Assertions
+        assert response == "RESPONSE"
+        
+        # Verify socket methods were called correctly
+        mock_socket_instance.connect.assert_called_once_with(('localhost', 8001))
+        mock_socket_instance.send.assert_called_once()
+        mock_socket_instance.recv.assert_called_once()
+
+def test_send_request_timeout():
+    # Create a mock network instance
+    mock_handler = Mock()
+    net = _Net('localhost', 8000, mock_handler)
+    
+    # Mock the socket to simulate a timeout
+    with patch('socket.socket') as mock_socket:
+        mock_socket_instance = Mock()
+        mock_socket.return_value.__enter__.return_value = mock_socket_instance
+        
+        # Simulate a timeout
+        mock_socket_instance.connect.side_effect = socket.timeout
+        
+        # Call send_request and check for None return
+        response = net.send_request(
+            Mock(ip='localhost', port=8001), 
+            'TEST', 
+            'arg1', 
+            'arg2'
+        )
+        
+        # Assertions
+        assert response is None
+
+def test_send_request_connection_refused():
+    # Create a mock network instance
+    mock_handler = Mock()
+    net = _Net('localhost', 8000, mock_handler)
+    
+    # Mock the socket to simulate connection refused
+    with patch('socket.socket') as mock_socket:
+        mock_socket_instance = Mock()
+        mock_socket.return_value.__enter__.return_value = mock_socket_instance
+        
+        # Simulate connection refused
+        mock_socket_instance.connect.side_effect = ConnectionRefusedError
+        
+        # Call send_request and check for None return
+        response = net.send_request(
+            Mock(ip='localhost', port=8001), 
+            'TEST', 
+            'arg1', 
+            'arg2'
+        )
+        
+        # Assertions
+        assert response is None

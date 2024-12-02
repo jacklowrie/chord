@@ -45,6 +45,53 @@ class _Net:
 
 
 
+    def send_request(self, dest_node, method, *args):
+        """
+        Sends a network request to a specific node.
+
+        Args:
+            dest_node (Address): The network address to send the request to
+            method (str): The method/request type to invoke
+            *args: Variable arguments to pass with the request
+
+        Returns:
+            The response from the target node, or None if communication fails
+        """
+        try:
+            # Create a socket with a timeout
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                # Set a reasonable timeout (e.g., 5 seconds)
+                sock.settimeout(5)
+                
+                # Connect to the target node
+                sock.connect((dest_node.ip, dest_node.port))
+                
+                # Prepare the request
+                # Convert all args to strings and join with ':'
+                request_args = ':'.join(str(arg) for arg in args)
+                request = f"{method}:{request_args}"
+                
+                # Send the request
+                sock.send(request.encode())
+                
+                # Receive the response
+                response = sock.recv(1024).decode()
+                
+                return response
+        
+        except socket.timeout:
+            print(f"Request to {dest_node} timed out")
+            return None
+        except ConnectionRefusedError:
+            print(f"Connection refused by {dest_node}")
+            return None
+        except Exception as e:
+            print(f"Network request error to {dest_node}: {e}")
+            return None
+
+
+
+
     def _listen_for_connections(self):
         """
         Continuously listens for incoming network connections.
@@ -65,6 +112,8 @@ class _Net:
                     sys.stderr.write(f"Error accepting connection: {e}\n")
                     sys.stderr.flush()
     
+
+
     def _handle_connection(self, client_socket):
         """
         Processes an individual network connection.

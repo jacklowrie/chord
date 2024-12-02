@@ -253,7 +253,9 @@ class Node:
         Returns:
             The result of the method call or an error message.
         """
-        if method == 'FIND_SUCCESSOR':
+        if method == "PING":
+            return "ALIVE"
+        elif method == 'FIND_SUCCESSOR':
             return self.find_successor(int(args[0]))
         elif method == 'GET_PREDECESSOR':
             return self.predecessor
