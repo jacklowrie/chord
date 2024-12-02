@@ -1,5 +1,6 @@
 import pytest
 import hashlib
+from unittest.mock import patch
 
 from chord import Address
 from chord import Node as ChordNode
@@ -9,6 +10,11 @@ port = 5
 key = f"{ip}:{port}"
 key = int(hashlib.sha1(key.encode()).hexdigest(), 16) % (2**16)
 
+# for start() so we don't use sockets
+@pytest.fixture(autouse=True)
+def mock_start():
+    with patch.object(ChordNode, 'start', return_value=None):
+        yield
 
 @pytest.fixture
 def node():

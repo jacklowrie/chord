@@ -97,7 +97,7 @@ class Node:
 
 
 
-    def fix_fingers(self)
+    def fix_fingers(self):
         pass
 
 
