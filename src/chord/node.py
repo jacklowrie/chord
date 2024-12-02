@@ -174,8 +174,63 @@ class Node:
         else:  # Wrap around case
             return key > start or key < end
     
+
+    def check_predecessor(self):
+        """
+        Checks if the predecessor node has failed.
+
+        Sets predecessor to None if unresponsive.
+        """
+        if not self.predecessor:
+            return
+
+        try:
+            # Try to send a simple request to the predecessor
+            response = self._net._send_request(
+                self.predecessor, 
+                'PING'
+            )
+            
+            # If no response or invalid response, consider node failed
+            if not response or response != 'ALIVE':
+                self.predecessor = None
+        
+        except Exception:
+            # Any network error means the predecessor is likely down
+            self.predecessor = None
+
+
+
+    def stabilize(self):
+        """
+        Periodically verifies and updates the node's successor.
+
+        This method ensures the correctness of the Chord ring topology.
+        """
+        # Pseudocode from the paper
+        # x = successor's predecessor
+        # if x is between this node and its successor
+        #     set successor to x
+        # notify successor about this node
+        pass
+    
+
+
+    def notify(self, potential_predecessor):
+        """
+        Notifies the node about a potential predecessor.
+
+        Args:
+            potential_predecessor (ChordNode): Node that might be the predecessor.
+        """
+        pass
+
+
+
     def fix_fingers(self):
         pass
+
+
 
     def start(self):
         """
@@ -200,9 +255,6 @@ class Node:
         """
         if method == 'FIND_SUCCESSOR':
             return self.find_successor(int(args[0]))
-        elif method == 'NOTIFY':
-            self.notify(args[0])
-            return "OK"
         elif method == 'GET_PREDECESSOR':
             return self.predecessor
         
