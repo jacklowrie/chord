@@ -1,6 +1,7 @@
 import hashlib
 
 from .address import Address
+from .net import _Net
 
 class Node:
     """Implements a Chord distributed hash table node.
@@ -40,9 +41,8 @@ class Node:
         self.next = 0 # for fix_fingers (iterating through finger_table)
         
         # Networking
-        self.server_socket = None
+        self._net = _Net(ip, port, self._process_request)
         self.is_running = False
-        self.network_thread = None
         
 
 
@@ -174,10 +174,47 @@ class Node:
         else:  # Wrap around case
             return key > start or key < end
     
+    def fix_fingers(self):
+        pass
+
+    def start(self):
+        """
+        Starts the Chord node's network listener.
+
+        Begins accepting incoming network connections in a separate thread.
+        """
+        self._net.start()
+    
     
 
-    def fix_fingers():
-        pass
+    def _process_request(self, method, args):
+        """
+        Routes incoming requests to appropriate methods.
+
+        Args:
+            method (str): The method to be called.
+            args (list): Arguments for the method.
+
+        Returns:
+            The result of the method call or an error message.
+        """
+        if method == 'FIND_SUCCESSOR':
+            return self.find_successor(int(args[0]))
+        elif method == 'NOTIFY':
+            self.notify(args[0])
+            return "OK"
+        elif method == 'GET_PREDECESSOR':
+            return self.predecessor
+        
+        return "INVALID_METHOD"
+    
+    def stop(self):
+        """
+        Gracefully stops the Chord node's network listener.
+
+        Closes the server socket and waits for the network thread to terminate.
+        """
+        self._net.stop()
 
 
 
