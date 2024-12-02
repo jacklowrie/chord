@@ -56,19 +56,48 @@ class Node:
     
 
 
-    def join(self, known_node):
+    def join(self, known_ip, known_port):
         """
-        Joins an existing Chord ring through a known node.
+        Joins an existing Chord ring through a known node's IP and port.
 
         Args:
-            known_node (ChordNode): An existing node in the Chord ring.
+            known_ip (str): IP address of an existing node in the Chord ring.
+            known_port (int): Port number of the existing node.
         """
         self.predecessor = None
-        # Use known node to find our successor
-        self.successor = known_node.find_successor(self.key)
         
-        # Initialize finger table
-        self.fix_fingers()
+        # Create an Address object for the known node
+        known_node_address = Address(known_ip, known_port)
+        
+        try:
+            # Send a find_successor request to the known node for this node's key
+            response = self._net.send_request(
+                known_node_address, 
+                'FIND_SUCCESSOR', 
+                self.address.key
+            )
+            
+            if response:
+                # Parse the response into an Address object
+                # Assuming the response is in "key:ip:port" format
+                parts = response.split(':')
+                if len(parts) == 3:
+                    self.successor = Address(parts[1], int(parts[2]))
+                    self.successor.key = int(parts[0])
+                else:
+                    raise ValueError("Invalid successor response format")
+            else:
+                raise ValueError("Failed to find successor")
+            
+            # Initialize finger table
+            self.fix_fingers()
+            
+            # Start the node's network listener
+            self.start()
+            
+        except Exception as e:
+            print(f"Join failed: {e}")
+            raise
 
 
 

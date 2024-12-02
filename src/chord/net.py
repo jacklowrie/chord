@@ -98,7 +98,7 @@ class _Net:
 
         Accepts client connections and spawns a thread to handle each connection.
         """
-        while self.is_running:
+        while self._running:
             try:
                 client_socket, address = self.server_socket.accept()
                 # Handle each connection in a separate thread
@@ -108,7 +108,7 @@ class _Net:
                     daemon=True
                 ).start()
             except Exception as e:
-                if self.is_running:
+                if self._running:
                     sys.stderr.write(f"Error accepting connection: {e}\n")
                     sys.stderr.flush()
     
