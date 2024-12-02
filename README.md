@@ -9,15 +9,15 @@ could write a password cracking program that runs distributed on the chord
 network.
 
 ## Files
-- `setup/`: scripts for verifying project is installed correctly
-    - `chk_config.py`: simple script for verifying setup. if you get a mininet import error, this can help debug. make sure you can run it with `sudo` and/or `pychord` alias (see usage)
-    - `chk_mininet.py`: simple script for making sure mininet works. sets up 2 hosts, 1 switch, and pings between them. make sure you can run it with `sudo` and/or `pychord` alias (see usage)
 - `src/`: all source code
     - `chord/`: chord protocol module. intended to be consumed by applications.
         - `node.py` the main node class. this is what should be used in applications.
         - `address.py` simple class that contains addressing info for chord nodes.
         - `net.py` class that handles socket/network communication for chord.
 - `tests/`: test suites.
+- `setup/`: scripts for verifying project is installed correctly
+    - `chk_config.py`: simple script for verifying setup. if you get a mininet import error, this can help debug. make sure you can run it with `sudo` and/or `pychord` alias (see usage)
+    - `chk_mininet.py`: simple script for making sure mininet works. sets up 2 hosts, 1 switch, and pings between them. make sure you can run it with `sudo` and/or `pychord` alias (see usage)
 - `.python-version`: specifies python version for pyenv.
 - `requirements.txt`: python dependencies
 - `requirements-dev.txt`: development dependencies. installs from `requirements.txt` first, then adds dev dependencies, so no need to run `pip install` for both.
