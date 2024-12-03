@@ -20,6 +20,20 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from chord import Node as ChordNode
 from chord import Address
 
+
+def join_with_retry(node, known_ip, known_port, max_attempts=3):
+    for attempt in range(max_attempts):
+        try:
+            node.join(known_ip, known_port)
+            return  # Successful join
+        except Exception as e:
+            if attempt < max_attempts - 1:
+                time.sleep(0.5)  
+            else:
+                # Last attempt failed
+                raise
+
+
 def main():
     # Get IP and port from command line arguments
     ip = sys.argv[1]
@@ -33,7 +47,11 @@ def main():
 
     # join existing ring
     print(f"joining node at {known}:{port}", file=sys.stderr)
-    node.join(known, port)
+    attempts = 3
+    try:
+        join_with_retry(node, known, port, attempts)
+    except Exception as e:
+        print(f"Failed to join after {attempts} attempts: {e}")
     
     if address == node.successor:
         print("PASSED: joiner's successor is the anchor.")
