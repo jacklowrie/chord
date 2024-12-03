@@ -134,10 +134,10 @@ class Node:
 
     def closest_preceding_node(self, id):
         """
-        Finds the closest preceding node for a given identifier.
+        Finds the closest preceding node for a given id in this node's fingertable.
 
         Args:
-            id (int): Identifier to find the closest preceding node for.
+            id (int): Identifier to find the closest preceding node for (the key).
 
         Returns:
             Address: The address of closest preceding node in the finger table.
@@ -193,15 +193,34 @@ class Node:
     
 
 
-    def notify(self, potential_predecessor):
+    def notify(self, potential_successor):
         """
-        Notifies the node about a potential predecessor.
+        Notifies a node about a potential predecessor.
 
         Args:
-            potential_predecessor (ChordNode): Node that might be the predecessor.
-        """
-        pass
+            potential_successor (Address): Node that might be the successor.
 
+        Returns:
+            bool: True if the notification is received (regardless of whether the
+                  update occurred), False otherwise
+        """
+        if potential_successor is None:
+            return False
+
+        try:
+            # Send notification to potential successor
+            print(f"sending notification to {potential_successor}", file=sys.stderr)
+            response = self._net.send_request(
+                potential_successor, 
+                'NOTIFY', 
+                f"{self.address.key}:{self.address.ip}:{self.address.port}"
+            )
+            if response == "OK" or response == "IGNORED":
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(f"Notify failed: {e}", file=sys.stderr)
 
 
     def start(self):
@@ -266,6 +285,26 @@ class Node:
     
 
 
+    def _be_notified(self, notifying_node):
+        """
+        Handles a notification from another node about potentially being its predecessor.
+
+        Args:
+            notifying_node (Address): Node that is notifying this node.
+
+        Returns:
+            bool: True if the node was accepted as a predecessor, False otherwise.
+        """
+        print("in _be_notified", file=sys.stderr)
+        # Update predecessor if necessary
+        if (not self.predecessor or 
+            self._is_between(self.predecessor.key, self.address.key, notifying_node.key)):
+            self.predecessor = notifying_node
+            return True
+        return False
+
+
+
     def _process_request(self, method, args):
         """
         Routes incoming requests to appropriate methods.
@@ -283,8 +322,18 @@ class Node:
             return self.find_successor(int(args[0]))
         elif method == 'GET_PREDECESSOR':
             return self.predecessor
-        
-        return "INVALID_METHOD"
+        elif method == 'NOTIFY':
+            # Parse the notifying node's details
+            print("processing NOTIFY.", file= sys.stderr)
+            try:
+                notifying_node = self._parse_address(':'.join([args[0], args[1], args[2]]))
+                print(f"notifying_node: {notifying_node}")
+                return "OK" if self._be_notified(notifying_node) else "IGNORED"
+
+            except ValueError:
+                return "INVALID_NODE"
+        else: 
+            return "INVALID_METHOD"
 
 
     def _parse_address(self, response):

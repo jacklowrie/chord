@@ -26,10 +26,12 @@ def main():
     known = sys.argv[3]
     address = Address(known, port)
             
-    # Create and join node
+    # initialize this node
     node = ChordNode(ip, port)
-    
-    print(f"joining node at {known}:{port}")
+    print(f"node initialized: {node.address}", file=sys.stderr)
+
+    # join existing ring
+    print(f"joining node at {known}:{port}", file=sys.stderr)
     node.join(known, port)
     
     if address == node.successor:
@@ -40,7 +42,31 @@ def main():
         printf("\tactual:  {node.successor}")
 
     
-    node.stop()
+    print(f"notifying successor")
+    valid_response = node.notify(node.successor)
+    if valid_response:
+        print("PASSED: notifying the successor receives a valid response")
+    else:
+        print("FAILED: notify went wrong.")
+    
+    sys.stdout.flush()
+    # Setup signal handling for graceful shutdown
+    def signal_handler(signum, frame):
+        print(f"\nReceived signal {signum}. Stopping Chord node...")
+        node.stop()
+        sys.exit(0)
+    
+    # Register signal handlers
+    signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
+    signal.signal(signal.SIGTERM, signal_handler)  # Termination signal
+    
+    # Keep the script running
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        node.stop()
+        sys.exit(0)
 
 if __name__ == '__main__':
     main()
