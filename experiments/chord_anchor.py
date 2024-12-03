@@ -3,8 +3,9 @@
 import sys
 import os
 import signal
+import time
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 from chord import Node as ChordNode
 
 def main():
@@ -34,7 +35,8 @@ def main():
     
     # Keep the script running
     try:
-        signal.pause()  # Wait for a signal
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
         node.stop()
         sys.exit(0)

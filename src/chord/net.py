@@ -80,13 +80,13 @@ class _Net:
                 return response
         
         except socket.timeout:
-            print(f"Request to {dest_node} timed out")
+            print("Request timed out", file=sys.stderr)
             return None
         except ConnectionRefusedError:
-            print(f"Connection refused by {dest_node}")
+            print("Connection refused", file=sys.stderr)
             return None
         except Exception as e:
-            print(f"Network request error to {dest_node}: {e}")
+            print(f"Network request error: {e}", file=sys.stderr)
             return None
 
 
@@ -100,7 +100,9 @@ class _Net:
         """
         while self._running:
             try:
+                print("Waiting for connection", file=sys.stderr)
                 client_socket, address = self.server_socket.accept()
+                print(f"Connection from {address}", file=sys.stderr)
                 # Handle each connection in a separate thread
                 threading.Thread(
                     target=self._handle_connection, 

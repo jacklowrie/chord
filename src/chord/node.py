@@ -1,4 +1,5 @@
 # node.py
+import sys
 
 from .address import Address
 from .net import _Net
@@ -76,7 +77,7 @@ class Node:
             )
             
             if response:
-                self.successor = self._parse_node_address(response)
+                self.successor = self._parse_address(response)
             else:
                 raise ValueError("Failed to find successor")
             
@@ -123,7 +124,7 @@ class Node:
                 'FIND_SUCCESSOR', 
                 id
             )
-            return self._parse_node_address(response)
+            return self._parse_address(response)
         
         except Exception as e:
             print(f"Find successor failed: {e}")
@@ -162,7 +163,7 @@ class Node:
 
         try:
             # Try to send a simple request to the predecessor
-            response = self._net._send_request(
+            response = self._net.send_request(
                 self.predecessor, 
                 'PING'
             )
@@ -171,7 +172,7 @@ class Node:
             if not response or response != 'ALIVE':
                 self.predecessor = None
         
-        except Exception:
+        except Exception as e:
             # Any network error means the predecessor is likely down
             self.predecessor = None
 
@@ -286,7 +287,7 @@ class Node:
         return "INVALID_METHOD"
 
 
-    def _parse_response(self, response):
+    def _parse_address(self, response):
         """
         Parses a network response into an Address object. Only addresses are expected.
 
