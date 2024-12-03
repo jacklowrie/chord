@@ -68,11 +68,21 @@ this should output the same path as when running with system python.
     - to just run: `pip install -r requirements.txt`
 At this point, you should be installed and good to go.
 
+### Verify Installation
+We know there's a lot of weird steps to this. There are two scripts
+that can help make sure things are set up correctly (see usage for how to invoke them):
+1. `setup/chk_config.py` will make sure your PYTHONPATH is correct, and that
+you can interact with mininet from python scripts.
+2. `setup/chk_mininet.py` will make sure that you can set up and run a network
+with mininet. If you see "2 packets transmitted, 2 received, 0% packet loss",
+then it's working correctly.
+
 ## Usage
 
 To run scripts using mininet, the full command format is:
 - `sudo [pass PYTHONPATH up] [path/to/venv/python] some_script.py`
-So to run the "check config" script, the command will be:
+Your path depends on where you clone this repo.
+So to run the "check config" script, the command will look like:
 - `sudo PYTHONPATH=$PYTHONPATH /home/ubuntu/chord/.venv/bin/python setup/chk_config.py`
 For quality of life, add an alias to your shell config:
 - `alias pychord="sudo PYTHONPATH=\$PYTHONPATH /home/ubuntu/chord/.venv/bin/python "`

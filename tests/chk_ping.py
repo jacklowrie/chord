@@ -35,10 +35,10 @@ def run_mininet():
 
     # start new ring
     h1.cmd(start_venv)
-    h1.cmd(f"python chord_anchor.py 10.0.0.1 {port}")
+    h1.cmd(f"python experiments/chord_anchor.py 10.0.0.1 {port} > tmp/h1.log 2>&1 &")
 
     h2.cmd(start_venv)
-    h2.cmd(f"python chord_joiner.py 10.0.0.2 {port} 10.0.0.1")
+    h2.cmd(f"python tests/chord_chk_pred.py 10.0.0.2 {port} 10.0.0.1 > tmp/h2.log 2>&1 &")
 
     
     # Start Mininet CLI for further testing
