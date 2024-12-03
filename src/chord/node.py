@@ -79,7 +79,7 @@ class Node:
             if response:
                 self.successor = self._parse_address(response)
             else:
-                raise ValueError("Failed to find successor")
+                raise ValueError("Failed to find successor. Join failed")
             
             self.start()
             self.fix_fingers()
