@@ -209,7 +209,6 @@ class Node:
 
         try:
             # Send notification to potential successor
-            print(f"sending notification to {potential_successor}", file=sys.stderr)
             response = self._net.send_request(
                 potential_successor, 
                 'NOTIFY', 
@@ -295,7 +294,6 @@ class Node:
         Returns:
             bool: True if the node was accepted as a predecessor, False otherwise.
         """
-        print("in _be_notified", file=sys.stderr)
         # Update predecessor if necessary
         if (not self.predecessor or 
             self._is_between(self.predecessor.key, self.address.key, notifying_node.key)):
@@ -324,11 +322,9 @@ class Node:
             return self.predecessor
         elif method == 'NOTIFY':
             # Parse the notifying node's details
-            print("processing NOTIFY.", file= sys.stderr)
             try:
-                notifying_node = self._parse_address(':'.join([args[0], args[1], args[2]]))
-                print(f"notifying_node: {notifying_node}")
-                return "OK" if self._be_notified(notifying_node) else "IGNORED"
+                notifier = self._parse_address(':'.join([args[0], args[1], args[2]]))
+                return "OK" if self._be_notified(notifier) else "IGNORED"
 
             except ValueError:
                 return "INVALID_NODE"

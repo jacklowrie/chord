@@ -27,7 +27,7 @@ def run_mininet():
 
     # Link hosts to the switch
     net.addLink(h1, s1, latency=30)
-    net.addLink(h2, s1, latency=30)
+    net.addLink(h2, s1, latency=50)
 
 
     # Start the network

@@ -13,7 +13,8 @@
 # an integration test.
 import sys
 import os
-import code
+import signal
+import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from chord import Node as ChordNode

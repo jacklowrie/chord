@@ -100,9 +100,7 @@ class _Net:
         """
         while self._running:
             try:
-                print("Waiting for connection", file=sys.stderr)
                 client_socket, address = self.server_socket.accept()
-                print(f"Connection from {address}", file=sys.stderr)
                 # Handle each connection in a separate thread
                 threading.Thread(
                     target=self._handle_connection, 

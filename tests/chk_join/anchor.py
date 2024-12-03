@@ -15,11 +15,9 @@ def main():
     port = int(sys.argv[2])
     
     node = ChordNode(ip, port)
-    print(f"node initialized: {node.address}", file=sys.stderr)
-
     # create (start) the ring
     node.create()
-    print(f"Chord ring started: {node.address}", file=sys.stderr)
+    print(f"Node created and ring started: {node.address}", file=sys.stderr)
     
     # Setup signal handling for graceful shutdown
     def signal_handler(signum, frame):
