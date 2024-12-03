@@ -26,8 +26,8 @@ def run_mininet():
     h2 = net.addHost('h2', ip='10.0.0.2')  # Host 2 with IP 10.0.0.2
 
     # Link hosts to the switch
-    net.addLink(h1, s1)
-    net.addLink(h2, s1)
+    net.addLink(h1, s1, latency=30)
+    net.addLink(h2, s1, latency=50)
 
 
     # Start the network
