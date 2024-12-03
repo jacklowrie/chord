@@ -14,6 +14,7 @@ network.
         - `node.py` the main node class. this is what should be used in applications.
         - `address.py` simple class that contains addressing info for chord nodes.
         - `net.py` class that handles socket/network communication for chord.
+- `experiments/` various scripts for running chord on mininet
 - `tests/`: test suites.
 - `setup/`: scripts for verifying project is installed correctly
     - `chk_config.py`: simple script for verifying setup. if you get a mininet import error, this can help debug. make sure you can run it with `sudo` and/or `pychord` alias (see usage)
