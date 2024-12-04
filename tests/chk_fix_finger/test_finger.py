@@ -36,23 +36,19 @@ def run_mininet():
 
     # start new ring
     h1.cmd(start_venv)
-    h1.cmd(f"python chord_anchor.py 10.0.0.1 {port} > /tmp/h1.log 2>&1 &")
 
     h2.cmd(start_venv)
-    h2.cmd(f"python chord_joiner.py 10.0.0.2 {port} 10.0.0.1 > /tmp/h2.log 2>&1 &")
     print(f"test for the fix_finger begins")
     # Log finger table for all nodes using chord_fix_finger.py
-    h1.cmd(f"python chord_fix_finger.py 10.0.0.1 {port} > /tmp/h1_fix_finger.log 2>&1 &")
-    h2.cmd(f"python chord_fix_finger.py 10.0.0.2 {port} > /tmp/h2_fix_finger.log 2>&1 &")    
-    
+    h1.cmd(f"python tests/chk_fix_finger/chord_fix_finger.py 10.0.0.1 {port} > /tmp/h1_fix_finger.log 2>&1 &")
+    h2.cmd(f"python tests/chk_fix_finger/chord_fix_finger.py 10.0.0.2 {port} > /tmp/h2_fix_finger.log 2>&1 &")
+
     print("Observing network behavior for 5 seconds...")
     time.sleep(5)
-
-    # Start Mininet CLI for further testing
-    CLI(net)
 
     # Stop the network
     net.stop()
 
 if __name__ == '__main__':
     run_mininet()  # Execute the network function
+
