@@ -1,5 +1,6 @@
 # node.py
 import sys
+import threading
 
 from .address import Address
 from .net import _Net
@@ -92,9 +93,67 @@ class Node:
 
 
     def fix_fingers(self):
-        pass
+            """
+            Incrementally updates one entry in the node's finger table.
+            """
+            if not self.successor:  # Ensure there's a valid successor
+                return
 
+            # Update the finger table entry pointed to by _next
+            start = (self.address.key + (1 << self._next)) % (1 << Address._M)
+            
+            try:
+                # Find the successor for this finger's start position
+                responsible_node = self.find_successor(start)
+                self.finger_table[self._next] = responsible_node
+            except Exception as e:
+                print(f"fix_fingers failed for finger {self._next}: {e}")
 
+            # Move to the next finger table entry, wrapping around if necessary
+            self._next = (self._next + 1) % Address._M
+
+    def _run_fix_fingers(self, interval=1.0):
+        """
+        Periodically invokes fix_fingers every `interval` seconds.
+
+        Args:
+            interval (float): Time interval between updates (in seconds).
+        """
+        self.fix_fingers()
+        # Schedule the next execution
+        self._fix_fingers_timer = threading.Timer(interval, self._run_fix_fingers, args=[interval])
+        self._fix_fingers_timer.start()
+
+    def start_periodic_tasks(self, interval=1.0):
+        """
+        Starts periodic tasks for the node, including fix_fingers.
+
+        Args:
+            interval (float): Time interval between periodic calls.
+        """
+        if self._fix_fingers_timer and self._fix_fingers_timer.is_alive():
+            # Timer is already running, no need to start again
+            self.logger.info("Periodic tasks are already running.")
+            return
+        self.is_running = True
+        self._run_fix_fingers(interval)
+
+    def stop_periodic_tasks(self):
+        """
+        Stops periodic tasks for the node gracefully.
+        """
+        if self._fix_fingers_timer:
+            self._fix_fingers_timer.cancel()
+            self._fix_fingers_timer = None
+        self.is_running = False
+
+    def log_finger_table(self):
+        """
+        Logs the entire finger table to the log file.
+        """
+        self.logger.info("Current Finger Table:")
+        for i, finger in enumerate(self.finger_table):
+            self.logger.info(f"  Finger[{i}] -> {finger}")
 
     def find_successor(self, id):
         """
