@@ -1,6 +1,7 @@
 # node.py
 import sys
 import threading
+import logging
 
 from .address import Address
 from .net import _Net
@@ -134,7 +135,7 @@ class Node:
         """
         if self._fix_fingers_timer and self._fix_fingers_timer.is_alive():
             # Timer is already running, no need to start again
-            self.logger.info("Periodic tasks are already running.")
+            print("Periodic tasks are already running.", file=sys.stderr)
             return
         self.is_running = True
         self._run_fix_fingers(interval)
@@ -152,9 +153,11 @@ class Node:
         """
         Logs the entire finger table to the log file.
         """
-        self.logger.info("Current Finger Table:")
+        message = "Current Finger Table:\n"
         for i, finger in enumerate(self.finger_table):
-            self.logger.info(f"  Finger[{i}] -> {finger}")
+            message += f"  Finger[{i}] -> {finger}\n"
+
+        print(message, file=sys.stderr)
 
     def find_successor(self, id):
         """
