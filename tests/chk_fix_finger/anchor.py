@@ -13,6 +13,7 @@ def main():
     
     # Create a Node instance
     node = ChordNode(ip, port)
+    node.create()
     
     # Log the finger table periodically
     def log_table_periodically():
