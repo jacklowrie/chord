@@ -18,7 +18,6 @@ def main():
     # create (start) the ring
     node.create()
     print(f"Node created and ring started: {node.address}", file=sys.stderr)
-
     # Setup signal handling for graceful shutdown
     def signal_handler(signum, frame):
         print(f"\nReceived signal {signum}. Stopping Chord node...")
