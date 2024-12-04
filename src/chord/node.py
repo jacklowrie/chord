@@ -79,6 +79,7 @@ class Node:
             
             if response:
                 self.successor = self._parse_address(response)
+                print(f"Node {self.address.key} joined the ring. Successor: {self.successor.key}", file=sys.stderr)
             else:
                 raise ValueError("Failed to find successor. Join failed")
             
@@ -248,8 +249,30 @@ class Node:
         # if x is between this node and its successor
         #     set successor to x
         # notify successor about this node
-        pass
-    
+        if not self.successor:
+            return
+
+        try:
+            # Get the predecessor of the current successor
+            print(f"stabilize: checking successor {self.successor.key} for predecessor", file=sys.stderr)
+            x_response = self._net.send_request(self.successor, 'GET_PREDECESSOR')
+
+            if x_response is None or x_response == "None":
+                print(f"stabilize: successor {self.successor.key} has no predecessor", file=sys.stderr)
+                return
+
+            print(f"stabilize: predecessor found: {x_response}", file=sys.stderr)
+            x = self._parse_address(x_response)
+
+            if x and self._is_between(self.address.key, self.successor.key, x.key):
+                self.successor = x
+                print(f"stabilize: updated successor to {self.successor.key}", file=sys.stderr)
+
+            self.notify(self.successor)
+            print(f"Node {self.address.key} - Updated Successor: {self.successor.key}, Predecessor: {self.predecessor.key}", file=sys.stderr)
+
+        except Exception as e:
+            print(f"Stabilize failed: {e}", file=sys.stderr) 
 
 
     def notify(self, potential_successor):
