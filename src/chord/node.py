@@ -189,7 +189,34 @@ class Node:
         # if x is between this node and its successor
         #     set successor to x
         # notify successor about this node
-        pass
+        if not self.successor:
+            return
+
+        try:
+            # Get the predecessor of the current successor
+            print(f"Stabilize: Checking successor's predecessor...", file=sys.stderr)
+            x_response = self._net.send_request(self.successor, 'GET_PREDECESSOR')
+
+            if x_response == "None" or not x_response:  # If the response is None or an invalid address
+                print(f"Successor has no predecessor", file=sys.stderr)
+                return
+
+            print(f"Stabilize: successor's predecessor fetched", file=sys.stderr)
+            # Parse the response and retrieve the predecessor address
+            x = self._parse_address(x_response)
+
+            # Ensure x is a valid address
+            if x and self._is_between(self.address.key, self.successor.key, x.key):
+                # Update successor to x
+                print(f"Stabilize: Updated successor to {x}", file=sys.stderr)
+                self.successor = x
+
+            # Notify the successor about this node being a potential predecessor
+            print(f"Stabilize: Notifying successor about potential predecessor", file=sys.stderr)
+            self.notify(self.successor)
+
+        except Exception as e:
+            print(f"Stabilize failed: {e}", file=sys.stderr)
     
 
 
