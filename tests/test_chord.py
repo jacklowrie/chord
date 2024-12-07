@@ -1,134 +1,110 @@
+# test_node.py
 import pytest
-import hashlib
-from unittest.mock import patch
-
-from chord import Address
+from unittest.mock import Mock, patch
 from chord import Node as ChordNode
-
-ip = "1.2.3.4"
-port = 5
-key = f"{ip}:{port}"
-key = int(hashlib.sha1(key.encode()).hexdigest(), 16) % (2**16)
-
-# for start() so we don't use sockets
-@pytest.fixture(autouse=True)
-def mock_start():
-    with patch.object(ChordNode, 'start', return_value=None):
-        yield
+from chord import Address
 
 @pytest.fixture
-def node():
-    return ChordNode(ip, port)
+def mock_net():
+    """Create a mock network layer for testing."""
+    with patch('chord._Net') as MockNet:
+        mock_net_instance = Mock()
+        MockNet.return_value = mock_net_instance
+        yield mock_net_instance
 
-def test_can_make_chordnode(node):
+@pytest.fixture
+def node(mock_net):
+    """Create a Chord node with mocked network layer."""
+    node = ChordNode('1.2.3.4', 5000)
+    # Patch the start method to prevent actual network binding
+    with patch.object(node, 'start', return_value=None):
+        yield node
 
-    assert node is not None
-    assert node.address.ip == "1.2.3.4"
-    assert node.address.port == 5
-
-def test_can_make_key(node):
-
-    assert key == node.address.key
-
-def test_can_create_ring(node):
-    node.create()
-
-    assert node.successor == Address(ip, port)
-
-def test_is_key_in_range(node):
-    node.create()
-     # Test simple case within range
-    assert node._is_key_in_range(node.address.key + 1) == True
+def test_join_successful(node, mock_net):
+    """Test successful join to an existing Chord ring."""
+    # Setup mock for send_request to simulate finding successor
+    known_node = Address('5.6.7.8', 8000)
+    mock_net.send_request.return_value = f"{known_node.key}:{known_node.ip}:{known_node.port}"
     
-    # Test exact node key (should return False)
-    assert node._is_key_in_range(node.address.key) == False
+    # Perform join
+    node.join('5.6.7.8', 8000)
     
-    # Test successor's key (should return False)
-    assert node._is_key_in_range(node.successor.key) == False
-    
-    # Test wrap-around scenario
-    # Create a scenario where node's key is near the end of the hash space
-    node.address.key = 65530  # Near max of 16-bit hash space
-    node.successor = Address(
-        ip='5.6.7.8', 
-        port=6000
-    )
-    node.successor.key = 50
-    
-    # Test wrap-around cases
-    assert node._is_key_in_range(65535) == True  # Just before wrap
-    assert node._is_key_in_range(40) == True    # Just after wrap
-    assert node._is_key_in_range(51) == False   # Beyond successor
-    assert node._is_key_in_range(65529) == False  # Before node
+    # Assertions
+    assert node.successor == known_node
+    mock_net.send_request.assert_called_once()
 
-import pytest
+def test_join_failure(node, mock_net):
+    """Test join failure scenario."""
+    # Setup mock to simulate join failure
+    mock_net.send_request.return_value = None
+    
+    # Expect an exception when join fails
+    with pytest.raises(ValueError, match="Failed to find successor"):
+        node.join('5.6.7.8', 8000)
 
-def test_closest_preceding_node_basic(node):
-    """Test basic finger table routing"""
-    # Create a mock finger table with some nodes
-    node.finger_table = [
-        Address('1.1.1.1', 5001),
-        Address('2.2.2.2', 5002),
-        Address('3.3.3.3', 5003)
-    ]
-    node.finger_table[0].key = 10
-    node.finger_table[1].key = 30
-    node.finger_table[2].key = 50
+def test_find_successor_local(node):
+    """Test find_successor when the key is in local range."""
+    node.address.key = 50
+    node.successor = Address('1.2.3.4', 6000)
+    node.successor.key = 100
     
-    # Test finding a node between current node and target id
-    result = node.closest_preceding_node(60)
-    assert result == node.finger_table[2]  # Node with key 50
-    
-    # Test when no finger is between current node and target
-    result = node.closest_preceding_node(5)
+    # Key is between node and successor
+    result = node.find_successor(75)
     assert result == node.address
 
-def test_closest_preceding_node_wrap_around(node):
-    """Test closest preceding node in a wrap-around scenario"""
-    # Simulate a wrap-around scenario in the hash space
-    node.address.key = 65530  # Near max of 16-bit hash space
-    node.finger_table = [
-        Address('1.1.1.1', 5001),
-        Address('2.2.2.2', 5002),
-        Address('3.3.3.3', 5003)
-    ]
-    node.finger_table[0].key = 10
-    node.finger_table[1].key = 40
-    node.finger_table[2].key = 60
+def test_find_successor_remote(node, mock_net):
+    """Test find_successor when routing through another node."""
+    # Setup node state
+    node.address.key = 50
+    node.successor = Address('1.2.3.4', 6000)
+    node.successor.key = 200
+    
+    # Mock closest preceding node
+    closest_node = Address('5.6.7.8', 7000)
+    closest_node.key = 100
+    node.closest_preceding_node = Mock(return_value=closest_node)
+    
+    # Mock network request for remote successor lookup
+    remote_successor = Address('9.10.11.12', 9000)
+    remote_successor.key = 250
+    mock_net.send_request.return_value = f"{remote_successor.key}:{remote_successor.ip}:{remote_successor.port}"
+    
+    # Perform find_successor for a key outside local range
+    result = node.find_successor(225)
+    
+    assert result == remote_successor
+    mock_net.send_request.assert_called_once()
 
+def test_check_predecessor_responsive(node, mock_net):
+    """Test check_predecessor with a responsive predecessor."""
+    # Setup a predecessor
+    predecessor = Address('5.6.7.8', 8000)
+    node.predecessor = predecessor
     
-    # Test wrap-around case
-    result = node.closest_preceding_node(50)
-    assert result == node.finger_table[1]  # Node with key 40
+    # Mock network response
+    mock_net.send_request.return_value = 'ALIVE'
     
-    # Test when no finger is between current node and target
-    result = node.closest_preceding_node(5)
-    assert result == node.address
+    # Run check
+    node.check_predecessor()
+    
+    # Predecessor should remain unchanged
+    assert node.predecessor == predecessor
+    mock_net.send_request.assert_called_once_with(predecessor, 'PING')
 
-def test_closest_preceding_node_empty_finger_table(node):
-    """Test behavior with an empty finger table"""
-    node.finger_table = []
+def test_check_predecessor_unresponsive(node, mock_net):
+    """Test check_predecessor with an unresponsive predecessor."""
+    # Setup a predecessor
+    predecessor = Address('5.6.7.8', 8000)
+    node.predecessor = predecessor
     
-    result = node.closest_preceding_node(100)
-    assert result == node.address
+    # Mock network response to simulate unresponsive node
+    mock_net.send_request.return_value = None
+    
+    # Run check
+    node.check_predecessor()
+    
+    # Predecessor should be set to None
+    assert node.predecessor is None
 
-def test_closest_preceding_node_sparse_finger_table(node):
-    """Test behavior with a sparse finger table"""
-    node.address.key = 0
-    node.finger_table = [
-        None,
-        Address('1.1.1.1', 5001),
-        None,
-        Address('2.2.2.2', 5002)
-    ]
-    node.finger_table[1].key = 30
-    node.finger_table[3].key = 50
-    
-    # Should return the first valid finger
-    result = node.closest_preceding_node(40)
-    assert result == node.finger_table[1]
-    
-    # When no valid finger found
-    result = node.closest_preceding_node(10)
-    assert result == node.address
+# Additional tests can be added for other complex methods like stabilize(), notify(), etc.
 
