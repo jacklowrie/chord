@@ -271,19 +271,16 @@ class Node:
             print(f"stabilize: checking successor {self.successor().key} for predecessor", file=sys.stderr)
             x_response = self._net.send_request(self.successor(), 'GET_PREDECESSOR')
 
-            if x_response is None or x_response == "None":
-                print(f"stabilize: successor {self.successor().key} has no predecessor", file=sys.stderr)
-                return
-
             print(f"stabilize: predecessor found: {x_response}", file=sys.stderr)
             x = self._parse_address(x_response)
 
             if x and self._is_between(self.address.key, self.successor().key, x.key):
                 self.finger_table[0] = x
                 print(f"stabilize: updated successor to {self.successor().key}", file=sys.stderr)
+            # otherwise, we just notify them that we exist. This is usually for the first joiner to a ring.
 
             self.notify(self.successor())
-            print(f"Node {self.address.key} - Updated Successor: {self.successor().key}, Predecessor: {self.predecessor.key}", file=sys.stderr)
+            print(f"Node {self.address} - Updated Successor: {self.successor()}, Predecessor: {self.predecessor}", file=sys.stderr)
 
         except Exception as e:
             print(f"Stabilize failed: {e}", file=sys.stderr) 
@@ -415,7 +412,7 @@ class Node:
         elif method == 'FIND_SUCCESSOR':
             return self.find_successor(int(args[0]))
         elif method == 'GET_PREDECESSOR':
-            return self.predecessor
+            return self.predecessor if self.predecessor else "nil"
         elif method == 'NOTIFY':
             # Parse the notifying node's details
             try:
@@ -441,6 +438,8 @@ class Node:
         Raises:
             ValueError: If the response format is invalid.
         """
+        if response == "nil":
+            return None
         parts = response.split(':')
         if len(parts) == 3:
             address = Address(parts[1], int(parts[2]))
