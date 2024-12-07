@@ -14,6 +14,12 @@ class Node:
     then use the methods to manage/interact with other nodes on
     the chord ring.
 
+    Of particular note, this class is only responsible for making, 
+    managing, and locating nodes (and therefore locating the node 
+    that is responsible for a key). In a key-value pair, 
+    It does NOT handle the management of values at all: that is 
+    an application-level responsibility.
+
     Attributes:
         address (Address): node address info (key, ip, port).
         successor (Address): The next node in the Chord ring.
@@ -95,24 +101,24 @@ class Node:
 
 
     def fix_fingers(self):
-            """
-            Incrementally updates one entry in the node's finger table.
-            """
-            if not self.successor:  # Ensure there's a valid successor
-                return
+        """
+        Incrementally updates one entry in the node's finger table.
+        """
+        if not self.successor:  # Ensure there's a valid successor
+            return
 
-            # Update the finger table entry pointed to by _next
-            start = (self.address.key + (1 << self._next)) % (1 << Address._M)
-            
-            try:
-                # Find the successor for this finger's start position
-                responsible_node = self.find_successor(start)
-                self.finger_table[self._next] = responsible_node
-            except Exception as e:
-                print(f"fix_fingers failed for finger {self._next}: {e}")
+        # Update the finger table entry pointed to by _next
+        start = (self.address.key + (1 << self._next)) % (1 << Address._M)
+        
+        try:
+            # Find the successor for this finger's start position
+            responsible_node = self.find_successor(start)
+            self.finger_table[self._next] = responsible_node
+        except Exception as e:
+            print(f"fix_fingers failed for finger {self._next}: {e}")
 
-            # Move to the next finger table entry, wrapping around if necessary
-            self._next = (self._next + 1) % Address._M
+        # Move to the next finger table entry, wrapping around if necessary
+        self._next = (self._next + 1) % Address._M
 
     def _run_fix_fingers(self, interval=1.0):
         """
