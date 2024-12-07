@@ -109,7 +109,10 @@ class Node:
             return
 
         # Update the finger table entry pointed to by _next
-        start = (self.address.key + (1 << self._next)) % (1 << Address._M)
+        gap = (2 ** self._next) % (2 ** Address._M)
+
+        start = self.address.key + gap
+        print(f"fixing finger {self._next}. gap is{gap}, start of interval is: {start}")
         
         try:
             # Find the successor for this finger's start position
@@ -178,16 +181,17 @@ class Node:
         """
         # If id is between this node and its successor
         if self._is_key_in_range(id):
-            return self.address
+            return self.successor()
         
-        # Find closest preceding node to route through
-        closest_node = self.closest_preceding_node(id)
+        # Find closest preceding node in my routing table.
+        closest_node = self.closest_preceding_finger(id)
         
-        # If closest node is self, return successor
+        # If closest preceding node is me, then I need to return my own successor
         if closest_node == self.address:
             return self.successor()
 
-        # Forward request to closest preceding node via network
+        # If it's not me, forward my request to the closer node and
+        # then return what they send back
         try:
             response = self._net.send_request(
                 closest_node, 
@@ -202,7 +206,7 @@ class Node:
             return self.successor()
 
 
-    def closest_preceding_node(self, id):
+    def closest_preceding_finger(self, id):
         """
         Finds the closest preceding node for a given id in this node's fingertable.
 
@@ -217,7 +221,7 @@ class Node:
             if finger and self._is_between(self.address.key, id, finger.key):
                 return finger
         
-        # If no node found, return self
+        # This is only possible if there are no finger_table entries
         return self.address
     
 
@@ -336,7 +340,7 @@ class Node:
 
     def _is_key_in_range(self, key):
         """
-        Checks if a key is within the node's range.
+        Checks if a key is between this node and its successor.
 
         Args:
             key (int): Identifier to check.
