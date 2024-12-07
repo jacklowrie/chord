@@ -39,7 +39,6 @@ class Node:
         self.address = Address(ip, port)
         
         # Network topology management
-        self.successor = None
         self.predecessor = None
         self.finger_table = [None] * Address._M
         self._next = 0 # for fix_fingers (iterating through finger_table)
@@ -48,7 +47,9 @@ class Node:
         self._net = _Net(ip, port, self._process_request)
         self.is_running = False
         
-
+    def successor(self):
+        """alias for self.finger_table[0]"""
+        return self.finger_table[0]
 
     def create(self):
         """
@@ -57,7 +58,7 @@ class Node:
         The node sets itself as its own successor and initializes the finger table.
         """
         self.predecessor = None
-        self.successor = self.address
+        self.finger_table[0] = self.address
         self.start()
         self.fix_fingers()
     
@@ -85,8 +86,8 @@ class Node:
             )
             
             if response:
-                self.successor = self._parse_address(response)
-                print(f"Node {self.address.key} joined the ring. Successor: {self.successor.key}", file=sys.stderr)
+                self.finger_table[0] = self._parse_address(response)
+                print(f"Node {self.address.key} joined the ring. Successor: {self.successor().key}", file=sys.stderr)
             else:
                 raise ValueError("Failed to find successor. Join failed")
             
@@ -104,7 +105,7 @@ class Node:
         """
         Incrementally updates one entry in the node's finger table.
         """
-        if not self.successor:  # Ensure there's a valid successor
+        if not self.successor():  # Ensure there's a valid successor
             return
 
         # Update the finger table entry pointed to by _next
@@ -119,7 +120,7 @@ class Node:
 
         # Move to the next finger table entry, wrapping around if necessary
         self._next = (self._next + 1) % Address._M
-
+    '''
     def _run_fix_fingers(self, interval=1.0):
         """
         Periodically invokes fix_fingers every `interval` seconds.
@@ -154,7 +155,7 @@ class Node:
             self._fix_fingers_timer.cancel()
             self._fix_fingers_timer = None
         self.is_running = False
-
+    '''
     def log_finger_table(self):
         """
         Logs the entire finger table to the log file.
@@ -184,7 +185,7 @@ class Node:
         
         # If closest node is self, return successor
         if closest_node == self.address:
-            return self.successor
+            return self.successor()
 
         # Forward request to closest preceding node via network
         try:
@@ -198,7 +199,7 @@ class Node:
         except Exception as e:
             print(f"Find successor failed: {e}")
             # Fallback to local successor if network request fails
-            return self.successor
+            return self.successor()
 
 
     def closest_preceding_node(self, id):
@@ -258,27 +259,27 @@ class Node:
         # if x is between this node and its successor
         #     set successor to x
         # notify successor about this node
-        if not self.successor:
+        if not self.successor():
             return
 
         try:
             # Get the predecessor of the current successor
-            print(f"stabilize: checking successor {self.successor.key} for predecessor", file=sys.stderr)
-            x_response = self._net.send_request(self.successor, 'GET_PREDECESSOR')
+            print(f"stabilize: checking successor {self.successor().key} for predecessor", file=sys.stderr)
+            x_response = self._net.send_request(self.successor(), 'GET_PREDECESSOR')
 
             if x_response is None or x_response == "None":
-                print(f"stabilize: successor {self.successor.key} has no predecessor", file=sys.stderr)
+                print(f"stabilize: successor {self.successor().key} has no predecessor", file=sys.stderr)
                 return
 
             print(f"stabilize: predecessor found: {x_response}", file=sys.stderr)
             x = self._parse_address(x_response)
 
-            if x and self._is_between(self.address.key, self.successor.key, x.key):
-                self.successor = x
-                print(f"stabilize: updated successor to {self.successor.key}", file=sys.stderr)
+            if x and self._is_between(self.address.key, self.successor().key, x.key):
+                self.finger_table[0] = x
+                print(f"stabilize: updated successor to {self.successor().key}", file=sys.stderr)
 
-            self.notify(self.successor)
-            print(f"Node {self.address.key} - Updated Successor: {self.successor.key}, Predecessor: {self.predecessor.key}", file=sys.stderr)
+            self.notify(self.successor())
+            print(f"Node {self.address.key} - Updated Successor: {self.successor().key}, Predecessor: {self.predecessor.key}", file=sys.stderr)
 
         except Exception as e:
             print(f"Stabilize failed: {e}", file=sys.stderr) 
@@ -343,10 +344,10 @@ class Node:
         Returns:
             bool: True if the key is in the node's range, False otherwise.
         """
-        if not self.successor: # no successor case
+        if not self.successor(): # no successor case
             return True
         
-        successor_key = self.successor.key
+        successor_key = self.successor().key
         
         if self.address.key < successor_key:
             # Normal case: key is strictly between node and successor

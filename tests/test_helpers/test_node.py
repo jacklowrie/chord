@@ -34,7 +34,7 @@ def test_can_make_key(node):
 def test_can_create_ring(node):
     node.create()
 
-    assert node.successor == Address(ip, port)
+    assert node.successor() == Address(ip, port)
 
 def test_is_key_in_range(node):
     node.create()
@@ -45,16 +45,16 @@ def test_is_key_in_range(node):
     assert node._is_key_in_range(node.address.key) == False
     
     # Test successor's key (should return False)
-    assert node._is_key_in_range(node.successor.key) == False
+    assert node._is_key_in_range(node.successor().key) == False
     
     # Test wrap-around scenario
     # Create a scenario where node's key is near the end of the hash space
     node.address.key = 65530  # Near max of 16-bit hash space
-    node.successor = Address(
+    node.finger_table[0] = Address(
         ip='5.6.7.8', 
         port=6000
     )
-    node.successor.key = 50
+    node.successor().key = 50
     
     # Test wrap-around cases
     assert node._is_key_in_range(65535) == True  # Just before wrap
