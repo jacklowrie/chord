@@ -3,6 +3,7 @@ Saves some time with manual testing.
 """
 import sys
 import os
+import code
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 from chord import Node as ChordNode

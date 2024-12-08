@@ -3,6 +3,7 @@ makes a node, joins a specified ring, then drops into repl.
 """
 import sys
 import os
+import code
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 from chord import Node as ChordNode
