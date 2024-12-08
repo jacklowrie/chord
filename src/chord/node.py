@@ -112,7 +112,7 @@ class Node:
         gap = (2 ** self._next) % (2 ** Address._M)
 
         start = self.address.key + gap
-        print(f"fixing finger {self._next}. gap is{gap}, start of interval is: {start}")
+        print(f"fixing finger {self._next}. gap is {gap}, start of interval is: {start}")
         
         try:
             # Find the successor for this finger's start position
