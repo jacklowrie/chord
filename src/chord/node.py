@@ -394,6 +394,56 @@ class Node:
             return True
         return False
 
+    def trace_successor(self, id, curr_hops):
+        """
+        Finds the successor node for a given identifier.
+
+        Args:
+            id (int): Identifier to find the successor for.
+
+        Returns:
+            Address: The address of the node responsible for the given identifier.
+        """
+        # If id is between this node and its successor
+        if self._is_key_in_range(id):
+            return self.successor(), curr_hops
+            # return curr_hops
+        
+        # Find closest preceding node in my routing table.
+        closest_node = self.closest_preceding_finger(id)
+        
+        # If closest preceding node is me, then I need to return my own successor
+        if closest_node == self.address:
+            return self.successor(), curr_hops
+
+        # If it's not me, forward my request to the closer node and
+        # then return what they send back
+        try:
+            response = self._net.send_request(
+                closest_node, 
+                'TRACE_SUCCESSOR', 
+                id,
+                curr_hops
+            )
+            print(f"Raw response: {response}", file=sys.stderr)  # Debugging line
+            parts = response.split(":")
+            if len(parts) != 4:
+                raise ValueError(f"Invalid response format: {response}")
+            node_key, node_ip, node_port, hops = parts
+            # resolved_node = Address(node_ip, int(node_port))
+            # resolved_node.key = int(node_key)
+            response_split = response.split(":")
+            address = ':'.join(response_split[:-1])
+            print ("[trace]Joined Address :", address)
+            # address = '':'.join(response[:2])
+            return address, int(hops)+1
+
+            # return self._parse_address(response), hops
+        
+        except Exception as e:
+            print(f"trace successor failed: {e}")
+            # Fallback to local successor if network request fails
+            return self.successor()
 
 
     def _process_request(self, method, args):
@@ -411,6 +461,19 @@ class Node:
             return "ALIVE"
         elif method == 'FIND_SUCCESSOR':
             return self.find_successor(int(args[0]))
+        elif method == "TRACE_SUCCESSOR":
+            try:
+                id, hops = int(args[0]), int(args[1])
+                print ("[NODE] Current ID ", id, "Current hops ", hops)
+                successor, hops = self.trace_successor(id, hops)
+                
+                print ("SUCCESSSOR NODE :", successor, "HOPS :", hops)
+                returnString = f"{successor}:{hops}"
+                return returnString
+            except Exception as e:
+                print(f"TRACE_SUCCESSOR error: {e}", file=sys.stderr)
+                return "ERROR:Invalid TRACE_SUCCESSOR Request"
+
         elif method == 'GET_PREDECESSOR':
             return self.predecessor if self.predecessor else "nil"
         elif method == 'NOTIFY':

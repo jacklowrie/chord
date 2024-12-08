@@ -70,7 +70,8 @@ class _Net:
                 # Convert all args to strings and join with ':'
                 request_args = ':'.join(str(arg) for arg in args)
                 request = f"{method}:{request_args}"
-                
+                if (method == "TRACE_SUCCESSOR"):
+                    print ('[SENDING TRACE REQ]', request)
                 # Send the request
                 sock.send(request.encode())
                 
@@ -124,13 +125,19 @@ class _Net:
         try:
             # Receive request
             request = client_socket.recv(1024).decode()
-            
+
             # Parse request
             method, *args = request.split(':')
             
+            if method == 'TRACE_SUCCESSOR':
+                print(f"[NET]Received request: {request}", file=sys.stderr)
+
             # Dispatch to appropriate method
             response = self._request_handler(method, args)
-            
+
+            if method == 'TRACE_SUCCESSOR':
+                print(f"[NET]Sent response: {response}", file=sys.stderr)
+
             # Send response
             client_socket.send(str(response).encode())
         except Exception as e:
