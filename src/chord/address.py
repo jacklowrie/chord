@@ -39,7 +39,7 @@ class Address:
         Returns:
             int: Hashed identifier within the hash space.
         """
-        return int(hashlib.sha1(key.encode()).hexdigest(), Address._M) % Address._SPACE
+        return int(hashlib.sha1(key.encode()).hexdigest(), 16) % Address._SPACE
 
 
 
