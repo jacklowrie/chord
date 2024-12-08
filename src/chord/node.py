@@ -76,7 +76,7 @@ class Node:
             )
             
             if response:
-                self.successor = self._parse_node_address(response)
+                self.successor = self._parse_response(response)
             else:
                 raise ValueError("Failed to find successor")
             
@@ -123,7 +123,7 @@ class Node:
                 'FIND_SUCCESSOR', 
                 id
             )
-            return self._parse_node_address(response)
+            return self._parse_response(response)
         
         except Exception as e:
             print(f"Find successor failed: {e}")
