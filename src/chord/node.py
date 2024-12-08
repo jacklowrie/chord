@@ -112,7 +112,7 @@ class Node:
         gap = (2 ** self._next) % (2 ** Address._M)
 
         start = self.address.key + gap
-        print(f"fixing finger {self._next}. gap is {gap}, start of interval is: {start}")
+        #print(f"fixing finger {self._next}. gap is {gap}, start of interval is: {start}")
         
         try:
             # Find the successor for this finger's start position
@@ -268,19 +268,19 @@ class Node:
 
         try:
             # Get the predecessor of the current successor
-            print(f"stabilize: checking successor {self.successor().key} for predecessor", file=sys.stderr)
+            #print(f"stabilize: checking successor {self.successor().key} for predecessor", file=sys.stderr)
             x_response = self._net.send_request(self.successor(), 'GET_PREDECESSOR')
 
-            print(f"stabilize: predecessor found: {x_response}", file=sys.stderr)
+            #print(f"stabilize: predecessor found: {x_response}", file=sys.stderr)
             x = self._parse_address(x_response)
 
             if x and self._is_between(self.address.key, self.successor().key, x.key):
                 self.finger_table[0] = x
-                print(f"stabilize: updated successor to {self.successor().key}", file=sys.stderr)
+                #print(f"stabilize: updated successor to {self.successor().key}", file=sys.stderr)
             # otherwise, we just notify them that we exist. This is usually for the first joiner to a ring.
 
             self.notify(self.successor())
-            print(f"Node {self.address} - Updated Successor: {self.successor()}, Predecessor: {self.predecessor}", file=sys.stderr)
+            #print(f"Node {self.address} - Updated Successor: {self.successor()}, Predecessor: {self.predecessor}", file=sys.stderr)
 
         except Exception as e:
             print(f"Stabilize failed: {e}", file=sys.stderr) 
