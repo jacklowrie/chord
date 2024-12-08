@@ -64,7 +64,7 @@ def test_is_key_in_range(node):
 
 import pytest
 
-def test_closest_preceding_node_basic(node):
+def test_closest_preceding_finger_basic(node):
     """Test basic finger table routing"""
     # Create a mock finger table with some nodes
     node.finger_table = [
@@ -77,14 +77,14 @@ def test_closest_preceding_node_basic(node):
     node.finger_table[2].key = 50
     
     # Test finding a node between current node and target id
-    result = node.closest_preceding_node(60)
+    result = node.closest_preceding_finger(60)
     assert result == node.finger_table[2]  # Node with key 50
     
     # Test when no finger is between current node and target
-    result = node.closest_preceding_node(5)
+    result = node.closest_preceding_finger(5)
     assert result == node.address
 
-def test_closest_preceding_node_wrap_around(node):
+def test_closest_preceding_finger_wrap_around(node):
     """Test closest preceding node in a wrap-around scenario"""
     # Simulate a wrap-around scenario in the hash space
     node.address.key = 65530  # Near max of 16-bit hash space
@@ -99,21 +99,21 @@ def test_closest_preceding_node_wrap_around(node):
 
     
     # Test wrap-around case
-    result = node.closest_preceding_node(50)
+    result = node.closest_preceding_finger(50)
     assert result == node.finger_table[1]  # Node with key 40
     
     # Test when no finger is between current node and target
-    result = node.closest_preceding_node(5)
+    result = node.closest_preceding_finger(5)
     assert result == node.address
 
-def test_closest_preceding_node_empty_finger_table(node):
+def test_closest_preceding_finger_empty_finger_table(node):
     """Test behavior with an empty finger table"""
     node.finger_table = []
     
-    result = node.closest_preceding_node(100)
+    result = node.closest_preceding_finger(100)
     assert result == node.address
 
-def test_closest_preceding_node_sparse_finger_table(node):
+def test_closest_preceding_finger_sparse_finger_table(node):
     """Test behavior with a sparse finger table"""
     node.address.key = 0
     node.finger_table = [
@@ -126,10 +126,10 @@ def test_closest_preceding_node_sparse_finger_table(node):
     node.finger_table[3].key = 50
     
     # Should return the first valid finger
-    result = node.closest_preceding_node(40)
+    result = node.closest_preceding_finger(40)
     assert result == node.finger_table[1]
     
     # When no valid finger found
-    result = node.closest_preceding_node(10)
+    result = node.closest_preceding_finger(10)
     assert result == node.address
 
