@@ -5,6 +5,8 @@ import os
 import signal
 import time
 import threading
+# from . import Address  # Ensure Address is imported
+# from src.chord.address import Address
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 from chord import Node as ChordNode
@@ -14,6 +16,17 @@ def stabilize_node(node):
         time.sleep(1)
         node.stabilize()
         node.fix_fingers()
+
+def trace_all_keys(node, output_file):
+    """
+    Traces successors for all keys in the hash space and logs hops.
+    """
+    # with open(output_file, 'w') as f:
+    #--
+    for key in range(2 ** 16):  # Iterate over entire hash space
+        successor, hops = node.trace_successor(key, 0)
+        print (f"{key}:{hops}", file=sys.stderr)
+        
 
 
 def main():
@@ -25,27 +38,24 @@ def main():
     # Create and join node
     node = ChordNode(ip, port)
     node.join(known, port)
-    
+
     stabilize_thread = threading.Thread(target=stabilize_node, args=(node,), daemon=True)
     stabilize_thread.start()
 
     # Setup signal handling for graceful shutdown
     def signal_handler(signum, frame):
-        print(f"\nReceived signal {signum}. Stopping Chord node...")
+        # print(f"\nReceived signal {signum}. Stopping Chord node...")
         node.stop()
         sys.exit(0)
-    
+
     # Register signal handlers
     signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
     signal.signal(signal.SIGTERM, signal_handler)  # Termination signal
-    
     time.sleep(16) # let the fingertable populate
-    # for each possible key, run node.trace_succ()
-        # for x in range(2 ** Address._M % Hashspace + 1)
-    # print the number of hops (stderr)
-    # then IN SOME OTHER SCRIPT, read the log file in, avg, and that's you're number.
-    # you could conceivably run this from every joiner, then aggregate across all
-    # log files.:
+    
+
+    output_file = f"/tmp/trace_results_{ip}_{port}.log"
+    trace_all_keys(node, output_file)
 
 
 
