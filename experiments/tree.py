@@ -23,7 +23,16 @@ def run_mininet():
 
     # Start the network
     net.start()
-    flag = True
+    hosts = net.hosts
+    anchor_ip = hosts[0].IP()
+
+    i=1
+    hosts[0].cmd(f"python3 experiments/trace_test_anchor.py {anchor_ip} {port} > /tmp/h{i}.log 2>&1 &")
+    for host in hosts[1:-1]:
+        host.cmd(f"python3 experiments/trace_test_joiner.py {host.IP()} {port} {anchor_ip} > /tmp/h{i}.log 2>&1 &")
+        i += 1
+    
+    # flag = True
     # for i in range(len(hosts)-1):
     #     host = hosts[i]
     #     if flag:

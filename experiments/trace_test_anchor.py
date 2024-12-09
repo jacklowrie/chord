@@ -1,31 +1,29 @@
-# run this from a host to join an existing chord ring.
-# good as a background process.
+# run this from a host to make a new chord ring. 
+# Good for simple testing of the chord protocol with mininet.
 import sys
 import os
 import signal
 import time
-import threading
+import threading 
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 from chord import Node as ChordNode
 
 def stabilize_node(node):
     while True:
-        time.sleep(1)
         node.stabilize()
         node.fix_fingers()
+        time.sleep(1)  # Call stabilize every 2 seconds
 
 
 def main():
     # Get IP and port from command line arguments
     ip = sys.argv[1]
     port = int(sys.argv[2])
-    known = sys.argv[3]
-            
-    # Create and join node
-    node = ChordNode(ip, port)
-    node.join(known, port)
     
+    node = ChordNode(ip, port)
+    node.create()
+
     stabilize_thread = threading.Thread(target=stabilize_node, args=(node,), daemon=True)
     stabilize_thread.start()
 
@@ -45,7 +43,7 @@ def main():
             time.sleep(1)
     except KeyboardInterrupt:
         node.stop()
+        sys.exit(0)
 
 if __name__ == '__main__':
     main()
-

@@ -39,6 +39,18 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
     signal.signal(signal.SIGTERM, signal_handler)  # Termination signal
     
+    time.sleep(16) # let the fingertable populate
+    # for each possible key, run node.trace_succ()
+        # for x in range(2 ** Address._M % Hashspace + 1)
+    # print the number of hops (stderr)
+    # then IN SOME OTHER SCRIPT, read the log file in, avg, and that's you're number.
+    # you could conceivably run this from every joiner, then aggregate across all
+    # log files.:
+
+
+
+
+
     # Keep the script running
     try:
         while True:
