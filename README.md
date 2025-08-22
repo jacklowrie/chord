@@ -23,6 +23,7 @@ network.
 - `chk_config.py`: simple script for verifying setup. if you get a mininet import error, this can help debug. make sure you can run it with `sudo` and/or `pychord` alias (see usage)
 - `chk_mininet.py`: simple script for making sure mininet works. sets up 2 hosts, 1 switch, and pings between them. make sure you can run it with `sudo` and/or `pychord` alias (see usage)
 - `chord_paper.pdf`: the research paper we're working from.
+- `Final_Report_Networks.pdf`: Final paper submitted for course.
 - `requirements.txt`: python dependencies
 - `requirements-dev.txt`: development dependencies. installs from `requirements.txt` first, then adds dev dependencies, so no need to run `pip install` for both.
 - `chord_paper.pdf`: the research paper we're working from.
